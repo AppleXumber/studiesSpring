@@ -5,7 +5,6 @@ import br.com.alura.forum.model.Resposta
 import br.com.alura.forum.model.Topico
 import br.com.alura.forum.model.Usuario
 import org.springframework.stereotype.Service
-import java.util.stream.Collector
 import java.util.stream.Collectors
 
 @Service
@@ -20,7 +19,8 @@ class RespostaService(private var respostas: List<Resposta>) {
     val autor = Usuario(
       id = 1,
       nome = "Ana da Silva",
-      email = "ana@email.com"
+      email = "ana@email.com",
+      password = ""
     )
     val topico = Topico(
       id = 1,
