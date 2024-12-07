@@ -1,46 +1,55 @@
-package br.com.alura.forum.config
-
+import br.com.alura.forum.service.UsuarioService
 import io.jsonwebtoken.Jwts
-import io.jsonwebtoken.SignatureAlgorithm
 import io.jsonwebtoken.security.Keys
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
-import org.springframework.security.core.Authentication
+import org.springframework.security.core.GrantedAuthority
 import org.springframework.stereotype.Component
-import java.util.Date
-import javax.crypto.SecretKey
+import java.nio.charset.StandardCharsets
+import java.util.*
 
 @Component
-class JWTUtil {
-  private val expiration: Long = 60000
+class JWTUtil(
+  private val usuarioService: UsuarioService
+) {
 
   @Value("\${jwt.secret}")
-  private lateinit var secret: String
+  private var secret: String = "2a12Dpr9yBjZksrrC34hnQEG1uDyF5HKckz3Cob4j5md1Jl3jXPF1ejzi"
 
-  fun generateToken(username: String): String {
-    val key: SecretKey = Keys.hmacShaKeyFor(secret.toByteArray())
+  private val expiration: Long = 60000
 
-    return Jwts.builder()
+  private val key = Keys.hmacShaKeyFor(secret.toByteArray(StandardCharsets.UTF_8))
+
+  fun generateToken(username: String, authorities: MutableCollection<out GrantedAuthority>): String {
+    return Jwts
+      .builder()
       .subject(username)
+      .claim("role", authorities)
       .expiration(Date(System.currentTimeMillis() + expiration))
-      .signWith(key, SignatureAlgorithm.HS512)
+      .signWith(key)
       .compact()
   }
 
   fun isValid(jwt: String?): Boolean {
     return try {
-//      Jwts.parser().setSigningKey(secret.toByteArray()).parseClaimsJws(jwt)
-      val key: SecretKey = Keys.hmacShaKeyFor(secret.toByteArray())
-      Jwts.parser().setSigningKey(key).build().parseClaimsJws(jwt)
+      Jwts.parser()
+        .verifyWith(key)
+        .build()
+        .parseSignedClaims(jwt)
       true
     } catch (e: IllegalArgumentException) {
       false
     }
   }
 
-  fun getAuthentication(jwt: String?): Authentication {
-    val key: SecretKey = Keys.hmacShaKeyFor(secret.toByteArray())
-    val username = Jwts.parser().setSigningKey(key).build().parseClaimsJws(jwt).body.subject
-    return UsernamePasswordAuthenticationToken(username, null, null,)
+  fun getAuthentication(jwt: String?): UsernamePasswordAuthenticationToken {
+    val username = Jwts.parser()
+      .verifyWith(key)
+      .build()
+      .parseSignedClaims(jwt)
+      .payload
+      .subject
+    val user = usuarioService.loadUserByUsername(username.toString())
+    return UsernamePasswordAuthenticationToken(username, null, user.authorities)
   }
 }

@@ -1,6 +1,7 @@
 package br.com.alura.forum.security
 
-import br.com.alura.forum.config.JWTUtil
+
+import JWTUtil
 import br.com.alura.forum.model.Credentials
 import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.servlet.FilterChain
@@ -27,8 +28,8 @@ class JWTLoginFilter(private val authManeger: AuthenticationManager, private val
     chain: FilterChain?,
     authResult: Authentication?
   ) {
-    val username = (authResult?.principal as UserDetails).username
-    val token = jwtUtil.generateToken(username)
+    val username = (authResult?.principal as UserDetails)
+    val token = jwtUtil.generateToken(username.username, username.authorities)
     response?.addHeader("Authorization", "Bearer $token")
   }
 }
