@@ -21,7 +21,7 @@ class SecurityConfiguration {
       .csrf { it.disable() }
       .authorizeHttpRequests {
         it
-          .requestMatchers(HttpMethod.GET, "/topics").hasAuthority("LEITURA_E_ESCRITA")
+          .requestMatchers(HttpMethod.GET, "/topicos").hasAuthority("LEITURA-ESCRITA")
           .anyRequest().authenticated()
       }
       .sessionManagement {
